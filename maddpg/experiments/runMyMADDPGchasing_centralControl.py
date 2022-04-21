@@ -16,7 +16,7 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing, ReshapeAction, RewardSheep, RewardWolf, Observe, GetCollisionForce, IntegrateState, \
+    ResetMultiAgentChasing, ResetStateAndReward,ReshapeAction, RewardSheep, RewardWolf, Observe, GetCollisionForce, IntegrateState, \
     IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
 
