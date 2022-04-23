@@ -33,15 +33,16 @@ minibatchSize = 1024#
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
-        numWolves = 1
+        numWolves = 3
         numSheeps = 1
-        numBlocks = 0
-        saveAllmodels = False
-        maxTimeStep = 25
+        numBlocks = 1
+        saveAllmodels = True
+        maxTimeStep = 75
         sheepSpeedMultiplier = 1
         individualRewardWolf = int(False)
+        trainingID = 0
 
     else:
         print(sys.argv)
@@ -53,7 +54,7 @@ def main():
         maxTimeStep = int(condition['maxTimeStep'])
         sheepSpeedMultiplier = float(condition['sheepSpeedMultiplier'])
         individualRewardWolf = int(condition['individualRewardWolf'])
-        trainingID = int(condiiton['trainingID'])
+        trainingID = int(condition['trainingID'])
 
         saveAllmodels = 1
 
@@ -160,7 +161,7 @@ def main():
         trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     folderName = '3wolves0.045dt'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
-    saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath+ str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
+    saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 
     maddpg = RunAlgorithm(runEpisode, maxEpisode, saveModels, numAgents)
     replayBuffer = getBuffer(bufferSize)
