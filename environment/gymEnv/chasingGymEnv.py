@@ -1,6 +1,6 @@
 import numpy as np
-from maddpgAlgor.maddpg_openai.multiagent.core import World, Agent, Landmark
-from maddpgAlgor.maddpg_openai.multiagent.scenario import BaseScenario
+from maddpg.multiagent.core import World, Agent, Landmark
+from maddpg.multiagent.scenario import BaseScenario
 # predator-prey environment
 # good agents are prey, adversaries are predators, now set good = 0, bad = 1
 
@@ -51,14 +51,6 @@ class IsTerminal:
         dist_min = self.predatorSize + self.preySize
 
         return True if dist < dist_min else False
-
-
-class TransitMultiAgentChasing:
-    def __init__(self):
-
-
-    def __call__(self, state, actions):
-
 
 
 class Scenario(BaseScenario):

@@ -16,7 +16,7 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing,ResetStateAndReward,ReshapeAction, RewardSheep, RewardWolf,ContinuousHuntingRewardWolf, Observe, GetCollisionForce, IntegrateState, \
+    ResetMultiAgentChasing,ResetStateAndReward,ReshapeAction, ContinuousHuntingRewardSheep, ContinuousHuntingRewardWolf, Observe, GetCollisionForce, IntegrateState, \
     IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
 
@@ -66,14 +66,14 @@ def main():
     sheepsID = list(range(numWolves, numAgents))
     blocksID = list(range(numAgents, numEntities))
 
-    wolfSize = 0.075
+    wolfSize = 0.06
     sheepSize = 0.05
     blockSize = 0.2
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
     blockMaxSpeed = None
-    sheepMaxSpeedOriginal = 1.3
+    sheepMaxSpeedOriginal = 1.2
     sheepMaxSpeed = sheepMaxSpeedOriginal * sheepSpeedMultiplier
 
     entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -82,8 +82,8 @@ def main():
 
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
-    rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision,
-                              punishForOutOfBound)
+    # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
 
     if individualRewardWolf:
         rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
@@ -97,7 +97,7 @@ def main():
 
     resetState = ResetMultiAgentChasing(numAgents, numBlocks)
 
-    reset = ResetStateAndReward(resetState,rewardWolf)
+    reset = ResetStateAndReward(resetState, rewardWolf, rewardSheep)
 
 
 

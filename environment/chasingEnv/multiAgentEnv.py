@@ -26,7 +26,6 @@ class RewardWolf:
 
     def __call__(self, state, action, nextState):
         wolfReward = 0
-
         for wolfID in self.wolvesID:
             wolfSize = self.entitiesSizeList[wolfID]
             wolfNextState = nextState[wolfID]
@@ -40,8 +39,9 @@ class RewardWolf:
         # print('wolfreward ', wolfReward)
         return reward
 
+
 class ContinuousHuntingRewardWolf:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife = 3 ,collisionReward=10):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3, collisionReward=10):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -49,7 +49,7 @@ class ContinuousHuntingRewardWolf:
         self.collisionReward = collisionReward
         self.sheepLife = sheepLife
         # self.sheepsLife = {sheepId:sheepLife for sheepId in sheepsID}
-        self.getCaughtHistory = {sheepId:0 for sheepId in sheepsID}
+        self.getCaughtHistory = {sheepID: 0 for sheepID in sheepsID}
     def __call__(self, state, action, nextState):
         wolfReward = 0                    
         for sheepID in self.sheepsID:
@@ -73,6 +73,7 @@ class ContinuousHuntingRewardWolf:
         reward = [wolfReward] * len(self.wolvesID)
         # print('wolfreward ', wolfReward)
         return reward
+
 
 class PunishForOutOfBound:
     def __init__(self):
@@ -119,7 +120,43 @@ class RewardSheep:
                 if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
                     sheepReward -= self.collisionPunishment
             reward.append(sheepReward)
+        return reward
 
+
+class ContinuousHuntingRewardSheep:
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision, punishForOutOfBound,
+                 sheepLife=3, collisionPunishment=10):
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.entitiesSizeList = entitiesSizeList
+        self.getPosFromState = getPosFromState
+        self.isCollision = isCollision
+        self.punishForOutOfBound = punishForOutOfBound
+        self.sheepLife = sheepLife
+        self.collisionPunishment = collisionPunishment
+        self.getCaughtHistory = {sheepId: 0 for sheepId in sheepsID}
+    def __call__(self, state, action, nextState): #state, action not used
+        reward = []
+        for sheepID in self.sheepsID:
+            sheepSize = self.entitiesSizeList[sheepID]
+            sheepNextState = nextState[sheepID]
+            sheepNextPos = self.getPosFromState(sheepNextState)
+            getCaught = 0
+            sheepReward = 0
+            sheepReward -= self.punishForOutOfBound(sheepNextPos)
+            for wolfID in self.wolvesID:
+                wolfSize = self.entitiesSizeList[wolfID]
+                wolfNextState = nextState[wolfID]
+                if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
+                    self.getCaughtHistory[sheepID] += 1
+                    getCaught = 1
+                    break
+            if not getCaught:
+                self.getCaughtHistory[sheepID] = 0
+            if self.getCaughtHistory[sheepID] == self.sheepLife:
+                sheepReward -= self.collisionPunishment
+                self.getCaughtHistory[sheepID] = 0
+                reward.append(sheepReward)
         return reward
 
 
@@ -128,24 +165,25 @@ class ResetMultiAgentChasing:
         self.positionDimension = 2
         self.numTotalAgents = numTotalAgents
         self.numBlocks = numBlocks
-
     def __call__(self):
         getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
         agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-
         getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
-
         blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
         state = np.array(agentsState + blocksState)
         return state
+
+
 class ResetStateAndReward:
-    def __init__(self,resetState,rewardWolf):
+    def __init__(self, resetState, rewardWolf, rewardSheep):
         self.resetState = resetState
-        self.rewwarWolf = rewardWolf               
+        self.rewardWolf = rewardWolf
+        self.rewardSheep = rewardSheep
     def __call__(self):
-        self.rewardWolf.getCaughtHistory = {sheepId:0 for sheepId in self.rewardWolf.sheepsID}
+        self.rewardWolf.getCaughtHistory = {sheepId: 0 for sheepId in self.rewardWolf.sheepsID}
+        self.rewardSheep.getCaughtHistory = {sheepId: 0 for sheepId in self.rewardWolf.sheepsID}
         return self.resetState()
 
 
