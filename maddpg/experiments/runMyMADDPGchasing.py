@@ -34,7 +34,7 @@ minibatchSize = 1024#
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 1
+    debug = 0
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -69,7 +69,7 @@ def main():
     sheepsID = list(range(numWolves, numAgents))
     blocksID = list(range(numAgents, numEntities))
 
-    wolfSize = 0.06
+    wolfSize = 0.075
     sheepSize = 0.05
     blockSize = 0.2
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
@@ -85,15 +85,15 @@ def main():
 
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
-    rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
-    # rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
 
     if individualRewardWolf:
         rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     else:
-        rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
-        # rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
