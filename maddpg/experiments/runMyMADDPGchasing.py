@@ -53,11 +53,12 @@ def main():
         maxTimeStep = int(condition['maxTimeStep'])
         sheepSpeedMultiplier = float(condition['sheepSpeedMultiplier'])
         individualRewardWolf = int(condition['individualRewardWolf'])
+        trainingID = int(condiiton['trainingID'])
 
         saveAllmodels = 1
 
-    print("maddpg: {} wolves, {} sheep, {} blocks, {} episodes with {} steps each eps, sheepSpeed: {}x, wolfIndividualReward: {}, save all models: {}".
-          format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf, str(saveAllmodels)))
+    print("maddpg: {} wolves, {} sheep, {} blocks, {} episodes with {} steps each eps, sheepSpeed: {}x, wolfIndividualReward: {}, sheepID: {}, save all models: {}".
+          format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf, trainingID, str(saveAllmodels)))
 
 
     numAgents = numWolves + numSheeps
@@ -155,8 +156,8 @@ def main():
     getModelList = [getAgentModel(i) for i in range(numAgents)]
     modelSaveRate = 5000
     individStr = 'individ' if individualRewardWolf else 'shared'
-    fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
-        numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
+    fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
+        trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     folderName = '3wolves0.045dt'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath+ str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]

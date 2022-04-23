@@ -46,25 +46,28 @@ def main():
     print("start")
 
     numWolvesLevels = [3]
-    numSheepsLevels = [4,2,1]
-    numBlocksLevels = [0]
+    numSheepsLevels = [1]
+    numBlocksLevels = [1]
     maxTimeStepLevels = [75]
     sheepSpeedMultiplierLevels = [1]
     individualRewardWolfLevels = [0]
+    trainingIdLevels = [0,1,2]
 
-    conditionLevels = [(wolfNum, sheepNum, blockNum, timeStep, sheepSpeed, individReward)
+    conditionLevels = [(wolfNum, sheepNum, blockNum, timeStep, sheepSpeed, individReward, trainingID)
                        for wolfNum in numWolvesLevels
                        for sheepNum in numSheepsLevels
                        for blockNum in numBlocksLevels
                        for timeStep in maxTimeStepLevels
                        for sheepSpeed in sheepSpeedMultiplierLevels
-                       for individReward in individualRewardWolfLevels]
+                       for individReward in individualRewardWolfLevels
+                       for trainingID in trainingIdLevels]
 
     conditions = []
     for condition in conditionLevels:
         numWolves, numSheeps, numBlocks, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf = condition
         parameters = {'numWolves': numWolves, 'numSheeps': numSheeps, 'numBlocks': numBlocks,
-                      'maxTimeStep': maxTimeStep, 'sheepSpeedMultiplier': sheepSpeedMultiplier, 'individualRewardWolf': individualRewardWolf}
+                      'maxTimeStep': maxTimeStep, 'sheepSpeedMultiplier': sheepSpeedMultiplier,
+                       'individualRewardWolf': individualRewardWolf, 'trainingID':trainingID}
         conditions.append(parameters)
 
 
