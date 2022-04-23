@@ -183,7 +183,7 @@ class ResetStateAndReward:
         self.rewardSheep = rewardSheep
     def __call__(self):
         self.rewardWolf.getCaughtHistory = {sheepId: 0 for sheepId in self.rewardWolf.sheepsID}
-        self.rewardSheep.getCaughtHistory = {sheepId: 0 for sheepId in self.rewardWolf.sheepsID}
+        self.rewardSheep.getCaughtHistory = {sheepId: 0 for sheepId in self.rewardSheep.sheepsID}
         return self.resetState()
 
 

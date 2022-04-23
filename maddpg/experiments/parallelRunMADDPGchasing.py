@@ -67,11 +67,7 @@ def main():
         numWolves, numSheeps, numBlocks, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf, trainingID = condition
         parameters = {'numWolves': numWolves, 'numSheeps': numSheeps, 'numBlocks': numBlocks,
                       'maxTimeStep': maxTimeStep, 'sheepSpeedMultiplier': sheepSpeedMultiplier,
-<<<<<<< HEAD
                       'individualRewardWolf': individualRewardWolf, 'trainingID': trainingID}
-=======
-                      'individualRewardWolf': individualRewardWolf, 'trainingID':trainingID}
->>>>>>> 56a4f7f94bc0424f32415e5952875f5188840e82
         conditions.append(parameters)
 
 

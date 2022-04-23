@@ -98,8 +98,8 @@ def main():
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
 
     resetState = ResetMultiAgentChasing(numAgents, numBlocks)
-
     reset = ResetStateAndReward(resetState, rewardWolf, rewardSheep)
+    # reset = ResetMultiAgentChasing(numAgents, numBlocks)
 
 
 
