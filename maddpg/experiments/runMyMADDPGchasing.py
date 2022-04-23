@@ -16,7 +16,8 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing,ResetStateAndReward,ReshapeAction, ContinuousHuntingRewardSheep, ContinuousHuntingRewardWolf, Observe, GetCollisionForce, IntegrateState, \
+    ResetMultiAgentChasing, ResetStateAndReward, ReshapeAction, RewardSheep, ContinuousHuntingRewardSheep, \
+    RewardWolf, ContinuousHuntingRewardWolf, Observe, GetCollisionForce, IntegrateState, \
     IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
 
@@ -84,15 +85,15 @@ def main():
 
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
-    # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
-    rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    # rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
 
     if individualRewardWolf:
         rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     else:
-        # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
-        rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        # rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
@@ -116,7 +117,7 @@ def main():
                                     entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState)
     transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
 
-    isTerminal = lambda state: [False]* numAgents
+    isTerminal = lambda state: [False] * numAgents
     initObsForParams = observe(reset())
     obsShape = [initObsForParams[obsID].shape[0] for obsID in range(len(initObsForParams))]
 
