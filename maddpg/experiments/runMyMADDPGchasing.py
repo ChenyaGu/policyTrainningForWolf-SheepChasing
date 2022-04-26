@@ -55,12 +55,12 @@ def main():
         maxTimeStep = int(condition['maxTimeStep'])
         sheepSpeedMultiplier = float(condition['sheepSpeedMultiplier'])
         individualRewardWolf = int(condition['individualRewardWolf'])
-        trainingID = int(condition['trainingID'])
+        # trainingID = int(condition['trainingID'])
 
         saveAllmodels = 1
 
-    print("maddpg: {} wolves, {} sheep, {} blocks, {} episodes with {} steps each eps, sheepSpeed: {}x, wolfIndividualReward: {}, sheepID: {}, save all models: {}".
-          format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf, trainingID, str(saveAllmodels)))
+    print("maddpg: {} wolves, {} sheep, {} blocks, {} episodes with {} steps each eps, sheepSpeed: {}x, wolfIndividualReward: {}, save all models: {}".
+          format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf, str(saveAllmodels)))
 
 
     numAgents = numWolves + numSheeps
@@ -69,14 +69,14 @@ def main():
     sheepsID = list(range(numWolves, numAgents))
     blocksID = list(range(numAgents, numEntities))
 
-    wolfSize = 0.06
-    sheepSize = 0.05
-    blockSize = 0.2
+    wolfSize = 0.065
+    sheepSize = 0.065
+    blockSize = 0.13
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
     blockMaxSpeed = None
-    sheepMaxSpeedOriginal = 1.2
+    sheepMaxSpeedOriginal = 1.0
     sheepMaxSpeed = sheepMaxSpeedOriginal * sheepSpeedMultiplier
 
     entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -98,9 +98,9 @@ def main():
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
 
-    resetState = ResetMultiAgentChasing(numAgents, numBlocks)
-    reset = ResetStateAndReward(resetState, rewardWolf, rewardSheep)
-    # reset = ResetMultiAgentChasing(numAgents, numBlocks)
+    # resetState = ResetMultiAgentChasing(numAgents, numBlocks)
+    # reset = ResetStateAndReward(resetState, rewardWolf, rewardSheep)
+    reset = ResetMultiAgentChasing(numAgents, numBlocks)
 
 
 
@@ -158,9 +158,11 @@ def main():
     getModelList = [getAgentModel(i) for i in range(numAgents)]
     modelSaveRate = 5000
     individStr = 'individ' if individualRewardWolf else 'shared'
-    fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
-        trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = '0.2dt1block'
+    # fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
+    #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
+    fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
+        numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
+    folderName = 'individ2block'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 

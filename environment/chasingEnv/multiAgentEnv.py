@@ -156,7 +156,7 @@ class ContinuousHuntingRewardSheep:
             if self.getCaughtHistory[sheepID] == self.sheepLife:
                 sheepReward -= self.collisionPunishment
                 self.getCaughtHistory[sheepID] = 0
-                reward.append(sheepReward)
+            reward.append(sheepReward)
         return reward
 
 
