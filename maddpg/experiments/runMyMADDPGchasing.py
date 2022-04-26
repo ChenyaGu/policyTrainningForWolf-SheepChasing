@@ -69,15 +69,9 @@ def main():
     sheepsID = list(range(numWolves, numAgents))
     blocksID = list(range(numAgents, numEntities))
 
-<<<<<<< HEAD
     wolfSize = 0.065
     sheepSize = 0.065
     blockSize = 0.13
-=======
-    wolfSize = 0.075
-    sheepSize = 0.05
-    blockSize = 0.2
->>>>>>> a493c6c57ce3bce72c69f339b705df46204a4ee3
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
