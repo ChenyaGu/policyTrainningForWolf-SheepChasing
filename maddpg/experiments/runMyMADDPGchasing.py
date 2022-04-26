@@ -85,15 +85,15 @@ def main():
 
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
-    # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
-    rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    # rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
 
     if individualRewardWolf:
         rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     else:
-        # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
-        rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        # rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
