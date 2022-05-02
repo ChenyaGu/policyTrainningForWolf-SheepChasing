@@ -160,6 +160,36 @@ class ContinuousHuntingRewardSheep:
         return reward
 
 
+class CalSheepCaughtHistory:
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision,
+                 sheepLife=3):
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.entitiesSizeList = entitiesSizeList
+        self.getPosFromState = getPosFromState
+        self.isCollision = isCollision
+        self.sheepLife = sheepLife
+        self.getCaughtHistory = {sheepId: 0 for sheepId in sheepsID}
+    def __call__(self, state, nextState): #state, action not used
+        for sheepID in self.sheepsID:
+            sheepSize = self.entitiesSizeList[sheepID]
+            sheepNextState = nextState[sheepID]
+            sheepNextPos = self.getPosFromState(sheepNextState)
+            getCaught = 0
+            for wolfID in self.wolvesID:
+                wolfSize = self.entitiesSizeList[wolfID]
+                wolfNextState = nextState[wolfID]
+                if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
+                    self.getCaughtHistory[sheepID] += 1
+                    getCaught = 1
+                    break
+            if not getCaught:
+                self.getCaughtHistory[sheepID] = 0
+            if self.getCaughtHistory[sheepID] == self.sheepLife:
+                self.getCaughtHistory[sheepID] = 0
+        return self.getCaughtHistory.copy()
+
+
 class ResetMultiAgentChasing:
     def __init__(self, numTotalAgents, numBlocks):
         self.positionDimension = 2
@@ -336,7 +366,52 @@ class IntegrateState:
         return nextState
 
 
+class IntegrateStateWithCaughtHistory:
+    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, 
+        getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.2):
+        self.numEntities = numEntities
+        self.entitiesMovableList = entitiesMovableList
+        self.damping = damping
+        self.dt = dt
+        self.massList = massList
+        self.entityMaxSpeedList = entityMaxSpeedList
+        self.getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
+        self.getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
+        self.calSheepCaughtHistory = calSheepCaughtHistory
 
+    def __call__(self, pForce, state):
+        getNextState = lambda entityPos, entityVel: list(entityPos) + list(entityVel)
+        nextState = []
+        sheepsID = self.calSheepCaughtHistory.sheepsID
+        for entityID in range(self.numEntities):
+            entityMovable = self.entitiesMovableList[entityID]
+            entityVel = self.getEntityVel(state, entityID)
+            entityPos = self.getEntityPos(state, entityID)
+
+
+            if not entityMovable:
+                nextState.append(getNextState(entityPos, entityVel))
+                continue
+
+            entityNextVel = entityVel * (1 - self.damping)
+            entityForce = pForce[entityID]
+            entityMass = self.massList[entityID]
+            if entityForce is not None:
+                entityNextVel += (entityForce / entityMass) * self.dt
+
+            entityMaxSpeed = self.entityMaxSpeedList[entityID]
+            if entityMaxSpeed is not None:
+                speed = np.sqrt(np.square(entityVel[0]) + np.square(entityVel[1]))
+                if speed > entityMaxSpeed:
+                    entityNextVel = entityNextVel / speed * entityMaxSpeed
+
+            entityNextPos = entityPos + entityNextVel * self.dt
+            nextStateWithoutCaughtHistory.append(getNextState(entityNextPos, entityNextVel))
+        caughtHistory = self.calSheepCaughtHistory(state, nextStateWithoutCaughtHistory)
+        for sheepID in sheepsID:
+            nextStateWithoutCaughtHistory[sheepID].append(caughtHistory[sheepID])
+        nextState = nextStateWithoutCaughtHistory.copy()
+        return nextState
 
 
 class TransitMultiAgentChasing:
