@@ -47,10 +47,10 @@ def main():
 
     numWolvesLevels = [3]
     numSheepsLevels = [4, 3, 2, 1]
-    numBlocksLevels = [2]
+    numBlocksLevels = [0]
     maxTimeStepLevels = [75]
     sheepSpeedMultiplierLevels = [1]
-    individualRewardWolfLevels = [1]
+    individualRewardWolfLevels = [0]
     # trainingIdLevels = [0, 1, 2]
 
     # Add trainingId for sheep policy separate training
