@@ -20,7 +20,7 @@ from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, Apply
     CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, RewardWolf, RewardWolfWithBiteAndKill, Observe, \
     GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory, IsCollision, PunishForOutOfBound, \
     getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
-from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
+from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividualWithBiteAndKill
 
 # fixed training parameters
 maxEpisode = 60000
@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -43,7 +43,7 @@ def main():
         saveAllmodels = True
         maxTimeStep = 75
         sheepSpeedMultiplier = 1
-        individualRewardWolf = int(False)
+        individualRewardWolf = int(True)
         trainingID = 0
 
     else:
@@ -91,7 +91,7 @@ def main():
                                             punishForOutOfBound, getCaughtHistoryFromAgentState)
 
     if individualRewardWolf:
-        rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        rewardWolf = RewardWolfIndividualWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState)
 
     else:
         # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
