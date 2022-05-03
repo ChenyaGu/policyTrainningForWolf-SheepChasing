@@ -51,7 +51,7 @@ def main():
     maxTimeStepLevels = [75]
     sheepSpeedMultiplierLevels = [1]
     individualRewardWolfLevels = [0]
-    trainingIdLevels = [0, 1, 2, 3]
+    trainingIdLevels = [0, 1]
 
     # Add trainingId for sheep policy separate training
     conditionLevels = [(wolfNum, sheepNum, blockNum, timeStep, sheepSpeed, individReward, trainingId)
