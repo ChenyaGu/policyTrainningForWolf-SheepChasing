@@ -3,7 +3,11 @@ import numpy as np
 import os
 import sys
 
+
 getPosFromAgentState = lambda state: np.array([state[0], state[1]])
+getVelFromAgentState = lambda state: np.array([state[2], state[3]])
+getCaughtHistoryFromAgentState = lambda state: np.array(state[4])
+
 
 class IsCollision:
     def __init__(self, getPosFromState):
@@ -40,6 +44,36 @@ class RewardWolf:
         return reward
 
 
+class RewardWolfWithBiteAndKill:
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife=3,
+                 biteReward=1, killReward=10):
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.entitiesSizeList = entitiesSizeList
+        self.isCollision = isCollision
+        self.getEntityCaughtHistory = lambda state, entityID: getCaughtHistoryFromAgentState(state[entityID])
+        self.sheepLife = sheepLife
+        self.biteReward = biteReward
+        self.killReward = killReward
+
+    def __call__(self, state, action, nextState):
+        wolfReward = 0
+        for wolfID in self.wolvesID:
+            wolfSize = self.entitiesSizeList[wolfID]
+            wolfNextState = nextState[wolfID]
+            for sheepID in self.sheepsID:
+                sheepSize = self.entitiesSizeList[sheepID]
+                sheepNextState = nextState[sheepID]
+                if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
+                    wolfReward += self.biteReward
+                sheepCaughtHistory = self.getEntityCaughtHistory(state, sheepID)
+                if sheepCaughtHistory == self.sheepLife:
+                    wolfReward += self.killReward
+
+        reward = [wolfReward] * len(self.wolvesID)
+        return reward
+
+
 class ContinuousHuntingRewardWolf:
     def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3, collisionReward=10):
         self.wolvesID = wolvesID
@@ -48,7 +82,6 @@ class ContinuousHuntingRewardWolf:
         self.isCollision = isCollision
         self.collisionReward = collisionReward
         self.sheepLife = sheepLife
-        # self.sheepsLife = {sheepId:sheepLife for sheepId in sheepsID}
         self.getCaughtHistory = {sheepID: 0 for sheepID in sheepsID}
     def __call__(self, state, action, nextState):
         wolfReward = 0                    
@@ -69,9 +102,7 @@ class ContinuousHuntingRewardWolf:
             if self.getCaughtHistory[sheepID] == self.sheepLife:
                 wolfReward += self.collisionReward
                 self.getCaughtHistory[sheepID] = 0
-
         reward = [wolfReward] * len(self.wolvesID)
-        # print('wolfreward ', wolfReward)
         return reward
 
 
@@ -123,6 +154,41 @@ class RewardSheep:
         return reward
 
 
+class RewardSheepWithBiteAndKill:
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision, punishForOutOfBound,
+                 getCaughtHistoryFromAgentState, sheepLife=3, bitePunishment=1, killPunishment=10):
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.entitiesSizeList = entitiesSizeList
+        self.getPosFromState = getPosFromState
+        self.isCollision = isCollision
+        self.punishForOutOfBound = punishForOutOfBound
+        self.getEntityCaughtHistory = lambda state, entityID: getCaughtHistoryFromAgentState(state[entityID])
+        self.sheepLife = sheepLife
+        self.bitePunishment = bitePunishment
+        self.killPunishment = killPunishment
+
+    def __call__(self, state, action, nextState): #state, action not used
+        reward = []
+        for sheepID in self.sheepsID:
+            sheepReward = 0
+            sheepNextState = nextState[sheepID]
+            sheepNextPos = self.getPosFromState(sheepNextState)
+            sheepReward -= self.punishForOutOfBound(sheepNextPos)
+            sheepSize = self.entitiesSizeList[sheepID]
+
+            for wolfID in self.wolvesID:
+                wolfSize = self.entitiesSizeList[wolfID]
+                wolfNextState = nextState[wolfID]
+                if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
+                    sheepReward -= self.bitePunishment
+                sheepCaughtHistory = self.getEntityCaughtHistory(state, sheepID)
+                if sheepCaughtHistory == self.sheepLife:
+                    sheepReward -= self.killPunishment
+            reward.append(sheepReward)
+        return reward
+
+
 class ContinuousHuntingRewardSheep:
     def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision, punishForOutOfBound,
                  sheepLife=3, collisionPunishment=10):
@@ -161,20 +227,17 @@ class ContinuousHuntingRewardSheep:
 
 
 class CalSheepCaughtHistory:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision,
-                 sheepLife=3):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
-        self.getPosFromState = getPosFromState
         self.isCollision = isCollision
         self.sheepLife = sheepLife
         self.getCaughtHistory = {sheepId: 0 for sheepId in sheepsID}
-    def __call__(self, state, nextState): #state, action not used
+    def __call__(self, state, nextState): #state not used
         for sheepID in self.sheepsID:
             sheepSize = self.entitiesSizeList[sheepID]
             sheepNextState = nextState[sheepID]
-            sheepNextPos = self.getPosFromState(sheepNextState)
             getCaught = 0
             for wolfID in self.wolvesID:
                 wolfSize = self.entitiesSizeList[wolfID]
@@ -185,7 +248,7 @@ class CalSheepCaughtHistory:
                     break
             if not getCaught:
                 self.getCaughtHistory[sheepID] = 0
-            if self.getCaughtHistory[sheepID] == self.sheepLife:
+            if self.getCaughtHistory[sheepID] == self.sheepLife+1:
                 self.getCaughtHistory[sheepID] = 0
         return self.getCaughtHistory.copy()
 
@@ -206,6 +269,15 @@ class ResetMultiAgentChasing:
         return state
 
 
+class ResetStateWithCaughtHistory:
+    def __init__(self, resetState, calSheepCaughtHistory):
+        self.resetState = resetState
+        self.calSheepCaughtHistory = calSheepCaughtHistory
+    def __call__(self):
+        self.calSheepCaughtHistory.getCaughtHistory = {sheepId: 0 for sheepId in self.calSheepCaughtHistory.sheepsID}
+        return self.resetState()
+
+
 class ResetStateAndReward:
     def __init__(self, resetState, rewardWolf, rewardSheep):
         self.resetState = resetState
@@ -218,17 +290,20 @@ class ResetStateAndReward:
 
 
 class Observe:
-    def __init__(self, agentID, wolvesID, sheepsID, blocksID, getPosFromState, getVelFromAgentState):
+    def __init__(self, agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState, getVelFromAgentState,
+                 getCaughtHistoryFromAgentState):
         self.agentID = agentID
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.blocksID = blocksID
-        self.getEntityPos = lambda state, entityID: getPosFromState(state[entityID])
+        self.getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
         self.getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
+        self.getEntityCaughtHistory = lambda state, entityID: getCaughtHistoryFromAgentState(state[entityID])
 
     def __call__(self, state):
-        blocksPos = [self.getEntityPos(state, blockID) for blockID in self.blocksID]
         agentPos = self.getEntityPos(state, self.agentID)
+        agentVel = self.getEntityVel(state, self.agentID)
+        blocksPos = [self.getEntityPos(state, blockID) for blockID in self.blocksID]
         blocksInfo = [blockPos - agentPos for blockPos in blocksPos]
 
         posInfo = []
@@ -238,20 +313,17 @@ class Observe:
             posInfo.append(wolfPos - agentPos)
 
         velInfo = []
+        caughtInfo = []
         for sheepID in self.sheepsID:
             if sheepID == self.agentID: continue
             sheepPos = self.getEntityPos(state, sheepID)
             posInfo.append(sheepPos - agentPos)
             sheepVel = self.getEntityVel(state, sheepID)
             velInfo.append(sheepVel)
+            sheepCaughtHistory = self.getEntityCaughtHistory(state, sheepID)
+            caughtInfo.append(sheepCaughtHistory)
 
-        agentVel = self.getEntityVel(state, self.agentID)
-        return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo)
-
-
-## notice the order of velocity and pos!!
-
-getVelFromAgentState = lambda agentState: np.array([agentState[2], agentState[3]])
+        return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo + caughtInfo)
 
 
 class GetCollisionForce:
@@ -319,13 +391,12 @@ class ApplyEnvironForce:
                 if force2 is not None:
                     if pForce[entity2ID] is None: pForce[entity2ID] = 0.0
                     pForce[entity2ID] = force2 + pForce[entity2ID]
-
         return pForce
 
 
 class IntegrateState:
-    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, 
-        getVelFromAgentState, getPosFromAgentState, damping=0.25, dt=0.2):
+    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
+                 damping=0.25, dt=0.2):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
@@ -342,7 +413,6 @@ class IntegrateState:
             entityMovable = self.entitiesMovableList[entityID]
             entityVel = self.getEntityVel(state, entityID)
             entityPos = self.getEntityPos(state, entityID)
-
 
             if not entityMovable:
                 nextState.append(getNextState(entityPos, entityVel))
@@ -367,8 +437,8 @@ class IntegrateState:
 
 
 class IntegrateStateWithCaughtHistory:
-    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, 
-        getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.2):
+    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
+                 calSheepCaughtHistory, damping=0.25, dt=0.2):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
@@ -388,7 +458,6 @@ class IntegrateStateWithCaughtHistory:
             entityVel = self.getEntityVel(state, entityID)
             entityPos = self.getEntityPos(state, entityID)
 
-
             if not entityMovable:
                 nextState.append(getNextState(entityPos, entityVel))
                 continue
@@ -406,12 +475,12 @@ class IntegrateStateWithCaughtHistory:
                     entityNextVel = entityNextVel / speed * entityMaxSpeed
 
             entityNextPos = entityPos + entityNextVel * self.dt
-            nextStateWithoutCaughtHistory.append(getNextState(entityNextPos, entityNextVel))
-        caughtHistory = self.calSheepCaughtHistory(state, nextStateWithoutCaughtHistory)
+            nextState.append(getNextState(entityNextPos, entityNextVel))
+        caughtHistory = self.calSheepCaughtHistory(state, nextState)
         for sheepID in sheepsID:
-            nextStateWithoutCaughtHistory[sheepID].append(caughtHistory[sheepID])
-        nextState = nextStateWithoutCaughtHistory.copy()
-        return nextState
+            nextState[sheepID].append(caughtHistory[sheepID])
+        nextStateWithCaughtHistory = nextState.copy()
+        return nextStateWithCaughtHistory
 
 
 class TransitMultiAgentChasing:

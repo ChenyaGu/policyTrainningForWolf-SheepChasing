@@ -16,19 +16,19 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing, ResetStateAndReward, ReshapeAction, RewardSheep, ContinuousHuntingRewardSheep, \
-    RewardWolf, ContinuousHuntingRewardWolf, Observe, GetCollisionForce, IntegrateState, \
-    IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState
+    ResetMultiAgentChasing, ResetStateWithCaughtHistory, ReshapeAction, CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, \
+    RewardWolf, RewardWolfWithBiteAndKill, Observe, GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory,\
+    IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
 
 # fixed training parameters
 maxEpisode = 60000
-learningRateActor = 0.01#
-learningRateCritic = 0.01#
-gamma = 0.95 #
-tau=0.01 #
-bufferSize = 1e6#
-minibatchSize = 1024#
+learningRateActor = 0.01
+learningRateCritic = 0.01
+gamma = 0.95
+tau = 0.01
+bufferSize = 1e6
+minibatchSize = 1024
 
 
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
@@ -85,24 +85,19 @@ def main():
 
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
-    rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
-    # rewardSheep = ContinuousHuntingRewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    rewardSheep = RewardSheepWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision,
+                                            punishForOutOfBound, getCaughtHistoryFromAgentState)
 
     if individualRewardWolf:
         rewardWolf = RewardWolfIndividual(wolvesID, sheepsID, entitiesSizeList, isCollision)
 
     else:
-        rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
-        # rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+        rewardWolf = RewardWolfWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState)
 
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
-
-    # resetState = ResetMultiAgentChasing(numAgents, numBlocks)
-    # reset = ResetStateAndReward(resetState, rewardWolf, rewardSheep)
-    reset = ResetMultiAgentChasing(numAgents, numBlocks)
-
-
 
     observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState,
                                               getVelFromAgentState)
@@ -113,9 +108,14 @@ def main():
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,
                                           getCollisionForce, getPosFromAgentState)
-    integrateState = IntegrateState(numEntities, entitiesMovableList, massList,
-                                    entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState)
+    calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, sheepsID, entitiesSizeList, isCollision)
+    integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
+                                                     getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory)
     transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+
+    resetState = ResetMultiAgentChasing(numAgents, numBlocks)
+    reset = ResetStateWithCaughtHistory(resetState, calSheepCaughtHistory)
+    # reset = ResetMultiAgentChasing(numAgents, numBlocks)
 
     isTerminal = lambda state: [False] * numAgents
     initObsForParams = observe(reset())
