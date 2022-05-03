@@ -269,6 +269,26 @@ class ResetMultiAgentChasing:
         return state
 
 
+class ResetMultiAgentChasingWithCaughtHistory:
+    def __init__(self, numTotalAgents, numBlocks):
+        self.positionDimension = 2
+        self.numTotalAgents = numTotalAgents
+        self.numBlocks = numBlocks
+    def __call__(self):
+        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
+        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
+        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
+        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
+        getBlockSpeed = lambda: np.zeros(self.positionDimension)
+        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
+        state = agentsState + blocksState
+        agentInitCaughtHistory = 0
+        for agentState in state:
+            agentState.append(agentInitCaughtHistory)
+        state = np.array(state)
+        return state
+
+
 class ResetStateWithCaughtHistory:
     def __init__(self, resetState, calSheepCaughtHistory):
         self.resetState = resetState
@@ -321,7 +341,7 @@ class Observe:
             sheepVel = self.getEntityVel(state, sheepID)
             velInfo.append(sheepVel)
             sheepCaughtHistory = self.getEntityCaughtHistory(state, sheepID)
-            caughtInfo.append(sheepCaughtHistory)
+            caughtInfo.append([sheepCaughtHistory])
 
         return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo + caughtInfo)
 

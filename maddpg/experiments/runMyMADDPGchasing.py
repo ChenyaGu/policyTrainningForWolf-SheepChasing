@@ -16,9 +16,10 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing, ResetStateWithCaughtHistory, ReshapeAction, CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, \
-    RewardWolf, RewardWolfWithBiteAndKill, Observe, GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory,\
-    IsCollision, PunishForOutOfBound, getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
+    ResetMultiAgentChasing, ResetMultiAgentChasingWithCaughtHistory, ResetStateWithCaughtHistory, ReshapeAction, \
+    CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, RewardWolf, RewardWolfWithBiteAndKill, Observe, \
+    GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory, IsCollision, PunishForOutOfBound, \
+    getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividual
 
 # fixed training parameters
@@ -55,7 +56,7 @@ def main():
         maxTimeStep = int(condition['maxTimeStep'])
         sheepSpeedMultiplier = float(condition['sheepSpeedMultiplier'])
         individualRewardWolf = int(condition['individualRewardWolf'])
-        # trainingID = int(condition['trainingID'])
+        trainingID = int(condition['trainingID'])
 
         saveAllmodels = 1
 
@@ -100,7 +101,7 @@ def main():
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
 
     observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState,
-                                              getVelFromAgentState)
+                                              getVelFromAgentState, getCaughtHistoryFromAgentState)
     observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
     reshapeAction = ReshapeAction()
@@ -113,7 +114,7 @@ def main():
                                                      getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory)
     transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
 
-    resetState = ResetMultiAgentChasing(numAgents, numBlocks)
+    resetState = ResetMultiAgentChasingWithCaughtHistory(numAgents, numBlocks)
     reset = ResetStateWithCaughtHistory(resetState, calSheepCaughtHistory)
     # reset = ResetMultiAgentChasing(numAgents, numBlocks)
 
@@ -158,10 +159,10 @@ def main():
     getModelList = [getAgentModel(i) for i in range(numAgents)]
     modelSaveRate = 5000
     individStr = 'individ' if individualRewardWolf else 'shared'
-    # fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
-    #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
-        numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
+    fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
+        trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
+    # fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
+    #     numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     folderName = 'shared0block'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
