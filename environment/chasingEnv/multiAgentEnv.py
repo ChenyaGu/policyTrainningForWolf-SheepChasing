@@ -310,6 +310,40 @@ class ResetStateAndReward:
 
 
 class Observe:
+    def __init__(self, agentID, wolvesID, sheepsID, blocksID, getPosFromState, getVelFromAgentState):
+        self.agentID = agentID
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.blocksID = blocksID
+        self.getEntityPos = lambda state, entityID: getPosFromState(state[entityID])
+        self.getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
+
+    def __call__(self, state):
+        blocksPos = [self.getEntityPos(state, blockID) for blockID in self.blocksID]
+        agentPos = self.getEntityPos(state, self.agentID)
+        blocksInfo = [blockPos - agentPos for blockPos in blocksPos]
+
+        posInfo = []
+        for wolfID in self.wolvesID:
+            if wolfID == self.agentID: continue
+            wolfPos = self.getEntityPos(state, wolfID)
+            posInfo.append(wolfPos - agentPos)
+
+        velInfo = []
+        for sheepID in self.sheepsID:
+            if sheepID == self.agentID: continue
+            sheepPos = self.getEntityPos(state, sheepID)
+            posInfo.append(sheepPos - agentPos)
+            sheepVel = self.getEntityVel(state, sheepID)
+            velInfo.append(sheepVel)
+
+        agentVel = self.getEntityVel(state, self.agentID)
+        # print(self.agentID,self.sheepsID,'state:', state)
+        # print(self.agentID,self.sheepsID,'agentVel:' ,agentVel, 'agentPos:' ,agentPos, 'blocksInfo:' ,blocksInfo, 'posInfo:' ,posInfo, 'velInfo:' ,velInfo)
+        return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo)
+
+
+class ObserveWithCaughtHistory:
     def __init__(self, agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState, getVelFromAgentState,
                  getCaughtHistoryFromAgentState):
         self.agentID = agentID

@@ -17,7 +17,7 @@ from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, Sample
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
     ResetMultiAgentChasing, ResetMultiAgentChasingWithCaughtHistory, ResetStateWithCaughtHistory, ReshapeAction, \
-    CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, RewardWolf, RewardWolfWithBiteAndKill, Observe, \
+    CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, RewardWolf, RewardWolfWithBiteAndKill, ObserveWithCaughtHistory, \
     GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory, IsCollision, PunishForOutOfBound, \
     getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividualWithBiteAndKill
@@ -100,7 +100,7 @@ def main():
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
 
-    observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState,
+    observeOneAgent = lambda agentID: ObserveWithCaughtHistory(agentID, wolvesID, sheepsID, blocksID, getPosFromAgentState,
                                               getVelFromAgentState, getCaughtHistoryFromAgentState)
     observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
