@@ -492,7 +492,7 @@ class IntegrateState:
 
 class IntegrateStateWithCaughtHistory:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
-                 calSheepCaughtHistory, damping=0.25, dt=0.2):
+                 calSheepCaughtHistory, damping=0.25, dt=0.05):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping

@@ -23,7 +23,7 @@ from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, Apply
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividualWithBiteAndKill
 
 # fixed training parameters
-maxEpisode = 120000
+maxEpisode = 80000
 learningRateActor = 0.01
 learningRateCritic = 0.01
 gamma = 0.95
@@ -163,7 +163,7 @@ def main():
     #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
         numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = 'newRewardIndividalAllSheep2block12Wepisode'
+    folderName = 'newRewardIndividalAllSheep2block8Wepisode0.05dt'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 
