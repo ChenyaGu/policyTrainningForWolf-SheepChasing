@@ -287,7 +287,7 @@ class ResetMultiAgentChasingWithCaughtHistory:
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
         # Obstacles overlap detection
         # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
-        while True:
+        while self.numBlocks:
             initBlockPos = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
