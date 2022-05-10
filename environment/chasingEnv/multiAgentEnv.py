@@ -118,11 +118,16 @@ class PunishForOutOfBound:
         return punishment
 
     def bound(self, x):
-        if x < 0.9:
+        # if x < 0.9:
+        #     return 0
+        # if x < 1.0:
+        #     return (x - 0.9) * 10
+        # return min(np.exp(2 * x - 2), 10)
+        if x < 1.2:
             return 0
-        if x < 1.0:
-            return (x - 0.9) * 10
-        return min(np.exp(2 * x - 2), 10)
+        if x < 1.3:
+            return (x - 1.2) * 10
+        return min(np.exp(2 * x - 2.6), 10)
 
 
 class RewardSheep:
@@ -275,12 +280,21 @@ class ResetMultiAgentChasingWithCaughtHistory:
         self.numTotalAgents = numTotalAgents
         self.numBlocks = numBlocks
     def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
+        getAgentRandomPos = lambda: np.random.uniform(-1.3, +1.3, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
         agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
+        getBlockRandomPos = lambda: np.random.uniform(-1.0, +1.0, self.positionDimension)
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
-        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
+        # Obstacles overlap detection
+        # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
+        while True:
+            initBlockPos = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
+            posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
+            dist = np.sqrt(np.sum(np.square(posDiff)))
+            if dist > (0.39*2 + 0.065*2):
+                break
+        blocksState = [initBlockPos[blockID] + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
+        # blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(2)]
         state = agentsState + blocksState
         agentInitCaughtHistory = 0
         for agentState in state:

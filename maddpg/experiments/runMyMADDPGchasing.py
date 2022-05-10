@@ -39,7 +39,7 @@ def main():
     if debug:
         numWolves = 3
         numSheeps = 1
-        numBlocks = 1
+        numBlocks = 2
         saveAllmodels = True
         maxTimeStep = 75
         sheepSpeedMultiplier = 1
@@ -72,7 +72,7 @@ def main():
 
     wolfSize = 0.065
     sheepSize = 0.065
-    blockSize = 0.13
+    blockSize = 0.39
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
@@ -163,7 +163,7 @@ def main():
     #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
         numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = 'newRewardIndividalAllSheep2block8Wepisode0.05dt'
+    folderName = '8Wepisode0.05dtLargerMapsizeAndBlockSize'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 
