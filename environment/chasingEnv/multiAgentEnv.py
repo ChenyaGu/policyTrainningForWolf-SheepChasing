@@ -560,9 +560,31 @@ class TransitMultiAgentChasing:
         self.integrateState = integrateState
 
     def __call__(self, state, actions):
-        # print(actions[0])
 
         actions = [self.reshapeAction(action) for action in actions]
+        # print('action', actions[0], actions[1])
+        # print('wolfaction', actions[0])
+
+        p_force = [None] * self.numEntities
+        p_force = self.applyActionForce(p_force, actions)
+        p_force = self.applyEnvironForce(p_force, state)
+        nextState = self.integrateState(p_force, state)
+
+        return nextState
+
+
+class TransitMultiAgentChasingVariousForce:
+    def __init__(self, numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState):
+        self.numEntities = numEntities
+        self.reshapeAction = reshapeAction
+        self.applyActionForce = applyActionForce
+        self.applyEnvironForce = applyEnvironForce
+        self.integrateState = integrateState
+
+    def __call__(self, state, actions):
+        wolfAction = [self.reshapeAction(actions[0], 5)]
+        sheepAction = [self.reshapeAction(actions[1], 6)]
+        actions = wolfAction + sheepAction
         # print('action', actions[0], actions[1])
         # print('wolfaction', actions[0])
 
@@ -584,4 +606,16 @@ class ReshapeAction:
         actionX = action[1] - action[2]
         actionY = action[3] - action[4]
         actionReshaped = np.array([actionX, actionY]) * self.sensitivity
+        return actionReshaped
+
+
+class ReshapeActionVariousForce:
+    def __init__(self):
+        self.actionDim = 2
+        # self.sensitivity = 5
+
+    def __call__(self, action, sensitivity):  # action: tuple of dim (5,1)
+        actionX = action[1] - action[2]
+        actionY = action[3] - action[4]
+        actionReshaped = np.array([actionX, actionY]) * sensitivity
         return actionReshaped

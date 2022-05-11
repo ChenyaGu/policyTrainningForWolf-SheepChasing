@@ -15,8 +15,8 @@ from maddpg.maddpgAlgor.trainer.myMADDPG import BuildMADDPGModels, TrainCritic, 
 from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, SampleFromMemory,\
     RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
-from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, ApplyActionForce, ApplyEnvironForce, \
-    ResetMultiAgentChasing, ResetMultiAgentChasingWithCaughtHistory, ResetStateWithCaughtHistory, ReshapeAction, \
+from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, TransitMultiAgentChasingVariousForce, ApplyActionForce, ApplyEnvironForce, \
+    ResetMultiAgentChasing, ResetMultiAgentChasingWithCaughtHistory, ResetStateWithCaughtHistory, ReshapeAction, ReshapeActionVariousForce,\
     CalSheepCaughtHistory, RewardSheep, RewardSheepWithBiteAndKill, RewardWolf, RewardWolfWithBiteAndKill, ObserveWithCaughtHistory, \
     GetCollisionForce, IntegrateState, IntegrateStateWithCaughtHistory, IsCollision, PunishForOutOfBound, \
     getPosFromAgentState, getVelFromAgentState, getCaughtHistoryFromAgentState
@@ -104,7 +104,7 @@ def main():
                                               getVelFromAgentState, getCaughtHistoryFromAgentState)
     observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
-    reshapeAction = ReshapeAction()
+    reshapeAction = ReshapeActionVariousForce()
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,
@@ -112,7 +112,7 @@ def main():
     calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, sheepsID, entitiesSizeList, isCollision)
     integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                                      getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory)
-    transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+    transit = TransitMultiAgentChasingVariousForce(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
 
     resetState = ResetMultiAgentChasingWithCaughtHistory(numAgents, numBlocks)
     reset = ResetStateWithCaughtHistory(resetState, calSheepCaughtHistory)
