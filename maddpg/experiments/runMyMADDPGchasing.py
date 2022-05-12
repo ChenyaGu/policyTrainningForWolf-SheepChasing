@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -44,7 +44,7 @@ def main():
         maxTimeStep = 75
         sheepSpeedMultiplier = 1
         individualRewardWolf = int(True)
-        trainingID = 0
+        # trainingID = 0
 
     else:
         print(sys.argv)

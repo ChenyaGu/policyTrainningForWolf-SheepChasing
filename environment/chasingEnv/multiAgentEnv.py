@@ -582,8 +582,8 @@ class TransitMultiAgentChasingVariousForce:
         self.integrateState = integrateState
 
     def __call__(self, state, actions):
-        wolfAction = [self.reshapeAction(actions[0], 5)]
-        sheepAction = [self.reshapeAction(actions[1], 6)]
+        wolfAction = [self.reshapeAction(actions[i], 5) for i in range(3)]
+        sheepAction = [self.reshapeAction(actions[i], 6) for i in range(3, len(actions))]
         actions = wolfAction + sheepAction
         # print('action', actions[0], actions[1])
         # print('wolfaction', actions[0])
