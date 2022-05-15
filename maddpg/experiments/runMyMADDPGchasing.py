@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -163,7 +163,7 @@ def main():
     #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
         numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = '8Wepisode0.05dtLargerMapsizeAndBlockSize'
+    folderName = '12Wepisode0.1dt1.1Mapsize0.325BlockSize1ForceRatio1.2SheepMaxSpeed'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 
