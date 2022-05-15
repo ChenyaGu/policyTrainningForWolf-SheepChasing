@@ -123,11 +123,11 @@ class PunishForOutOfBound:
         # if x < 1.0:
         #     return (x - 0.9) * 10
         # return min(np.exp(2 * x - 2), 10)
-        if x < 1.2:
+        if x < 1.0:
             return 0
-        if x < 1.3:
-            return (x - 1.2) * 10
-        return min(np.exp(2 * x - 2.6), 10)
+        if x < 1.1:
+            return (x - 1.0) * 10
+        return min(np.exp(2 * x - 2.2), 10)
 
 
 class RewardSheep:
@@ -280,10 +280,10 @@ class ResetMultiAgentChasingWithCaughtHistory:
         self.numTotalAgents = numTotalAgents
         self.numBlocks = numBlocks
     def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1.3, +1.3, self.positionDimension)
+        getAgentRandomPos = lambda: np.random.uniform(-1.1, +1.1, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
         agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-        getBlockRandomPos = lambda: np.random.uniform(-1.0, +1.0, self.positionDimension)
+        getBlockRandomPos = lambda: np.random.uniform(-0.8, +0.8, self.positionDimension)
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
         # Obstacles overlap detection
         # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
@@ -291,7 +291,7 @@ class ResetMultiAgentChasingWithCaughtHistory:
             initBlockPos = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
-            if dist > (0.39*2 + 0.065*2):
+            if dist > (0.325*2 + 0.065*8):
                 break
         blocksState = [initBlockPos[blockID] + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
         # blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(2)]
@@ -506,7 +506,7 @@ class IntegrateState:
 
 class IntegrateStateWithCaughtHistory:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
-                 calSheepCaughtHistory, damping=0.25, dt=0.05):
+                 calSheepCaughtHistory, damping=0.25, dt=0.1):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping

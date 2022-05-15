@@ -23,7 +23,7 @@ from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, Trans
 from environment.chasingEnv.multiAgentEnvWithIndividReward import RewardWolfIndividualWithBiteAndKill
 
 # fixed training parameters
-maxEpisode = 80000
+maxEpisode = 120000
 learningRateActor = 0.01
 learningRateCritic = 0.01
 gamma = 0.95
@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 1
+    debug = 0
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -72,12 +72,12 @@ def main():
 
     wolfSize = 0.065
     sheepSize = 0.065
-    blockSize = 0.39
+    blockSize = 0.325
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
     blockMaxSpeed = None
-    sheepMaxSpeedOriginal = 1.0
+    sheepMaxSpeedOriginal = 1.2
     sheepMaxSpeed = sheepMaxSpeedOriginal * sheepSpeedMultiplier
 
     entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -104,7 +104,7 @@ def main():
                                               getVelFromAgentState, getCaughtHistoryFromAgentState)
     observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
-    reshapeAction = ReshapeActionVariousForce()
+    reshapeAction = ReshapeAction()
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,
@@ -112,7 +112,7 @@ def main():
     calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, sheepsID, entitiesSizeList, isCollision)
     integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                                      getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory)
-    transit = TransitMultiAgentChasingVariousForce(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+    transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
 
     resetState = ResetMultiAgentChasingWithCaughtHistory(numAgents, numBlocks)
     reset = ResetStateWithCaughtHistory(resetState, calSheepCaughtHistory)
