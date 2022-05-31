@@ -12,8 +12,8 @@ import json
 
 from maddpg.maddpgAlgor.trainer.myMADDPG import BuildMADDPGModels, TrainCritic, TrainActor, TrainCriticBySASR, \
     TrainActorFromSA, TrainMADDPGModelsWithBuffer, ActOneStep, actByPolicyTrainNoisy, actByPolicyTargetNoisyForNextState
-from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, SampleFromMemory,\
-    RunTimeStep, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
+from RLframework.RLrun_MultiAgent import UpdateParameters, SampleOneStep, SampleFromMemory, ShuffleSheepState,\
+    RunTimeStep, RunTimeStepWithShuffleSheepState, RunEpisode, RunAlgorithm, getBuffer, SaveModel, StartLearn
 from functionTools.loadSaveModel import saveVariables
 from environment.chasingEnv.multiAgentEnv import TransitMultiAgentChasing, TransitMultiAgentChasingVariousForce, ApplyActionForce, ApplyEnvironForce, \
     ResetMultiAgentChasing, ResetMultiAgentChasingWithCaughtHistory, ResetStateWithCaughtHistory, ReshapeAction, ReshapeActionVariousForce,\
@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -71,7 +71,7 @@ def main():
     blocksID = list(range(numAgents, numEntities))
 
     wolfSize = 0.065
-    sheepSize = 0.065
+    sheepSize = 0.05
     blockSize = 0.26
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
@@ -151,7 +151,8 @@ def main():
     actOneStep = lambda allAgentsStates, runTime: [actOneStepOneModel(model, allAgentsStates) for model in modelsList]
 
     sampleOneStep = SampleOneStep(transit, rewardFunc)
-    runDDPGTimeStep = RunTimeStep(actOneStep, sampleOneStep, trainMADDPGModels, observe = observe)
+    shuffleSheepState = ShuffleSheepState(calSheepCaughtHistory)
+    runDDPGTimeStep = RunTimeStepWithShuffleSheepState(actOneStep, sampleOneStep, trainMADDPGModels, shuffleSheepState, observe = observe)
 
     runEpisode = RunEpisode(reset, runDDPGTimeStep, maxTimeStep, isTerminal)
 

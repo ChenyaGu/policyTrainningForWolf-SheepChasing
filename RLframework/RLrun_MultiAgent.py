@@ -109,6 +109,71 @@ def getBuffer(bufferSize):
     return replayBuffer
 
 
+class ShuffleSheepState:
+    def __init__(self, calSheepCaughtHistory):
+        self.calSheepCaughtHistory = calSheepCaughtHistory
+
+    def __call__(self, state, action, reward, nextState):
+        sheepsID = self.calSheepCaughtHistory.sheepsID
+        shuffleSheepsId = sheepsID.copy()
+        random.shuffle(shuffleSheepsId)
+        if len(sheepsID) > 1:
+            while shuffleSheepsId == sheepsID:
+                random.shuffle(shuffleSheepsId)
+        shufflePair = {sheepId: shuffleSheepId for sheepId, shuffleSheepId in zip(sheepsID, shuffleSheepsId)}
+
+        caughtHistory = self.calSheepCaughtHistory(state, nextState)
+        lifeList = np.array([caughtHistory[key] for key in sheepsID])
+        if np.any(lifeList == self.calSheepCaughtHistory.sheepLife):
+            shuffledState = []
+            shuffledAction = []
+            shuffledReward = []
+            shuffledNextState = []
+            for agentId, oneStepInfo in enumerate(zip(state, action, reward, nextState)):
+                agentState, agentAction, agentReward, agentNextState = oneStepInfo
+                if agentId in sheepsID:
+                    shuffledState.append(state[shufflePair[agentId]])
+                    shuffledAction.append(action[shufflePair[agentId]])
+                    shuffledReward.append(reward[shufflePair[agentId]])
+                    shuffledNextState.append(nextState[shufflePair[agentId]])
+                else:
+                    shuffledState.append(agentState)
+                    shuffledAction.append(agentAction)
+                    shuffledReward.append(agentReward)
+                    shuffledNextState.append(agentNextState)
+            return shuffledState, shuffledAction, shuffledReward, shuffledNextState
+        else:
+            return state, action, reward, nextState
+
+
+class RunTimeStepWithShuffleSheepState:
+    def __init__(self, actOneStep, sampleOneStep, learnFromBuffer, shuffleSheepState, observe=None):
+        self.actOneStep = actOneStep
+        self.sampleOneStep = sampleOneStep
+        self.learnFromBuffer = learnFromBuffer
+        self.observe = observe
+        self.shuffleSheepState = shuffleSheepState
+
+    def __call__(self, state, replayBuffer, trajectory):
+        runTime = len(trajectory)
+        observation = self.observe(state) if self.observe is not None else state
+        action = self.actOneStep(observation, runTime)
+        reward, nextState = self.sampleOneStep(state, action)
+        state, action, reward, nextState = self.shuffleSheepState(state, action, reward, nextState)
+
+        nextObservation = self.observe(nextState) if self.observe is not None else nextState
+        replayBuffer.append((observation, action, reward, nextObservation))
+        trajectory.append((state, action, reward, nextState))
+
+        isMultiAgent = isinstance(self.learnFromBuffer, list)
+        if isMultiAgent:
+            for id, agentLearn in enumerate(self.learnFromBuffer):
+                agentLearn(replayBuffer, runTime, id)
+        else:
+            self.learnFromBuffer(replayBuffer, runTime)
+        return reward, nextState, replayBuffer, trajectory
+
+
 class RunTimeStep:
     def __init__(self, actOneStep, sampleOneStep, learnFromBuffer, observe = None):
         self.actOneStep = actOneStep
@@ -133,7 +198,6 @@ class RunTimeStep:
             self.learnFromBuffer(replayBuffer, runTime)
 
         return reward, nextState, replayBuffer, trajectory
-
 
 
 class RunEpisode:
