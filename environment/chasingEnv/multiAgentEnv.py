@@ -161,7 +161,7 @@ class RewardSheep:
 
 class RewardSheepWithBiteAndKill:
     def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision, punishForOutOfBound,
-                 getCaughtHistoryFromAgentState, sheepLife=3, bitePunishment=1, killPunishment=10):
+                 getCaughtHistoryFromAgentState, sheepLife=10, bitePunishment=0.01, killPunishment=1):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -232,7 +232,7 @@ class ContinuousHuntingRewardSheep:
 
 
 class CalSheepCaughtHistory:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=10):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
