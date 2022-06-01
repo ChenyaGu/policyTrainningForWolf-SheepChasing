@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 1
+    debug = 0
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -152,7 +152,8 @@ def main():
 
     sampleOneStep = SampleOneStep(transit, rewardFunc)
     shuffleSheepState = ShuffleSheepState(calSheepCaughtHistory)
-    runDDPGTimeStep = RunTimeStepWithShuffleSheepState(actOneStep, sampleOneStep, trainMADDPGModels, shuffleSheepState, observe = observe)
+    # runDDPGTimeStep = RunTimeStepWithShuffleSheepState(actOneStep, sampleOneStep, trainMADDPGModels, shuffleSheepState, observe=observe)
+    runDDPGTimeStep = RunTimeStep(actOneStep, sampleOneStep, trainMADDPGModels, observe=observe)
 
     runEpisode = RunEpisode(reset, runDDPGTimeStep, maxTimeStep, isTerminal)
 

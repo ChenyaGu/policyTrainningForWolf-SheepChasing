@@ -47,7 +47,7 @@ def main():
 
     numWolvesLevels = [3]
     numSheepsLevels = [1, 2]
-    numBlocksLevels = [2]
+    numBlocksLevels = [0]
     maxTimeStepLevels = [75]
     sheepSpeedMultiplierLevels = [1]
     individualRewardWolfLevels = [1]
