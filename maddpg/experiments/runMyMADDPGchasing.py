@@ -165,7 +165,7 @@ def main():
     #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
         numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = '12Wepisode0.05dt1.0Mapsize0.26BlockSize1ForceRatio1SheepMaxSpeed'
+    folderName = '0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 
