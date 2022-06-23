@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 1
+    debug = 0
     if debug:
         numWolves = 3
         numSheeps = 1
