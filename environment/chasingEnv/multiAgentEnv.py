@@ -45,8 +45,8 @@ class RewardWolf:
 
 
 class RewardWolfWithBiteAndKill:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife=10,
-                 biteReward=0.01, killReward=1):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife=3,
+                 biteReward=1, killReward=10):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -161,7 +161,7 @@ class RewardSheep:
 
 class RewardSheepWithBiteAndKill:
     def __init__(self, wolvesID, sheepsID, entitiesSizeList, getPosFromState, isCollision, punishForOutOfBound,
-                 getCaughtHistoryFromAgentState, sheepLife=10, bitePunishment=0.01, killPunishment=1):
+                 getCaughtHistoryFromAgentState, sheepLife=3, bitePunishment=1, killPunishment=10):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -232,7 +232,7 @@ class ContinuousHuntingRewardSheep:
 
 
 class CalSheepCaughtHistory:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=10):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -259,31 +259,18 @@ class CalSheepCaughtHistory:
 
 
 class ResetMultiAgentChasing:
-    def __init__(self, numTotalAgents, numBlocks):
+    def __init__(self, numTotalAgents, numBlocks, mapSize, blockSize, agentMaxSize):
         self.positionDimension = 2
         self.numTotalAgents = numTotalAgents
         self.numBlocks = numBlocks
+        self.mapSize = mapSize
+        self.blockSize = blockSize
+        self.agentMaxSize = agentMaxSize
     def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
+        getAgentRandomPos = lambda: np.random.uniform(-self.mapSize, +self.mapSize, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
         agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
-        getBlockSpeed = lambda: np.zeros(self.positionDimension)
-        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
-        state = np.array(agentsState + blocksState)
-        return state
-
-
-class ResetMultiAgentChasingWithCaughtHistory:
-    def __init__(self, numTotalAgents, numBlocks):
-        self.positionDimension = 2
-        self.numTotalAgents = numTotalAgents
-        self.numBlocks = numBlocks
-    def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1.0, +1.0, self.positionDimension)
-        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
-        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-        getBlockRandomPos = lambda: np.random.uniform(-0.6, +0.6, self.positionDimension)
+        getBlockRandomPos = lambda: np.random.uniform(-(self.mapSize-3*self.agentMaxSize), +(self.mapSize-3*self.agentMaxSize), self.positionDimension)
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
         # Obstacles overlap detection
         # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
@@ -291,7 +278,34 @@ class ResetMultiAgentChasingWithCaughtHistory:
             initBlockPos = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
-            if dist > (0.26*2 + 0.065*8):
+            if dist > (self.blockSize*2 + self.agentMaxSize*8):
+                break
+        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
+        state = np.array(agentsState + blocksState)
+        return state
+
+
+class ResetMultiAgentChasingWithCaughtHistory:
+    def __init__(self, numTotalAgents, numBlocks, mapSize, blockSize, agentMaxSize):
+        self.positionDimension = 2
+        self.numTotalAgents = numTotalAgents
+        self.numBlocks = numBlocks
+        self.mapSize = mapSize
+        self.blockSize = blockSize
+        self.agentMaxSize = agentMaxSize
+    def __call__(self):
+        getAgentRandomPos = lambda: np.random.uniform(-self.mapSize, +self.mapSize, self.positionDimension)
+        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
+        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
+        getBlockRandomPos = lambda: np.random.uniform(-(self.mapSize-3*self.agentMaxSize), +(self.mapSize-3*self.agentMaxSize), self.positionDimension)
+        getBlockSpeed = lambda: np.zeros(self.positionDimension)
+        # Obstacles overlap detection
+        # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
+        while self.numBlocks:
+            initBlockPos = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
+            posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
+            dist = np.sqrt(np.sum(np.square(posDiff)))
+            if dist > (self.blockSize*2 + self.agentMaxSize*8):
                 break
         blocksState = [initBlockPos[blockID] + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
         # blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(2)]
@@ -574,16 +588,17 @@ class TransitMultiAgentChasing:
 
 
 class TransitMultiAgentChasingVariousForce:
-    def __init__(self, numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState):
+    def __init__(self, numEntities, reshapeWolfAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState):
         self.numEntities = numEntities
-        self.reshapeAction = reshapeAction
+        self.reshapeWolfAction = reshapeWolfAction
+        self.reshapeSheepAction = reshapeSheepAction
         self.applyActionForce = applyActionForce
         self.applyEnvironForce = applyEnvironForce
         self.integrateState = integrateState
 
     def __call__(self, state, actions):
-        wolfAction = [self.reshapeAction(actions[i], 5) for i in range(3)]
-        sheepAction = [self.reshapeAction(actions[i], 6) for i in range(3, len(actions))]
+        wolfAction = [self.reshapeWolfAction(actions[i]) for i in range(3)]
+        sheepAction = [self.reshapeSheepAction(actions[i]) for i in range(3, len(actions))]
         actions = wolfAction + sheepAction
         # print('action', actions[0], actions[1])
         # print('wolfaction', actions[0])
@@ -597,9 +612,9 @@ class TransitMultiAgentChasingVariousForce:
 
 
 class ReshapeAction:
-    def __init__(self):
+    def __init__(self, sensitivity = 5):
         self.actionDim = 2
-        self.sensitivity = 5
+        self.sensitivity = sensitivity
 
     def __call__(self, action): # action: tuple of dim (5,1)
         # print(action)

@@ -35,7 +35,7 @@ minibatchSize = 1024
 # arguments: numWolves numSheeps numBlocks saveAllmodels = True or False
 
 def main():
-    debug = 0
+    debug = 1
     if debug:
         numWolves = 3
         numSheeps = 1
@@ -72,7 +72,7 @@ def main():
 
     wolfSize = 0.065
     sheepSize = 0.05
-    blockSize = 0.26
+    blockSize = 0.2
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1.0
@@ -87,15 +87,18 @@ def main():
     isCollision = IsCollision(getPosFromAgentState)
     punishForOutOfBound = PunishForOutOfBound()
     # rewardSheep = RewardSheep(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision, punishForOutOfBound)
+    sheepLife = 5
+    biteReward = 1
+    killReward = 10
     rewardSheep = RewardSheepWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, getPosFromAgentState, isCollision,
-                                            punishForOutOfBound, getCaughtHistoryFromAgentState)
+                                            punishForOutOfBound, getCaughtHistoryFromAgentState, biteReward, killReward)
 
     if individualRewardWolf:
-        rewardWolf = RewardWolfIndividualWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState)
+        rewardWolf = RewardWolfIndividualWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife, biteReward, killReward)
 
     else:
         # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
-        rewardWolf = RewardWolfWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState)
+        rewardWolf = RewardWolfWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife, biteReward, killReward)
 
     rewardFunc = lambda state, action, nextState: \
         list(rewardWolf(state, action, nextState)) + list(rewardSheep(state, action, nextState))
@@ -104,19 +107,29 @@ def main():
                                               getVelFromAgentState, getCaughtHistoryFromAgentState)
     observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
-    reshapeAction = ReshapeAction()
+    wolfForceMag = 5
+    sheepForceMag = 6
+    reshapeWolfAction = ReshapeAction(sensitivity = wolfForceMag)
+    reshapeSheepAction = ReshapeAction(sensitivity = sheepForceMag)
+    #reshapeAction = ReshapeAction()
+
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,
                                           getCollisionForce, getPosFromAgentState)
-    calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, sheepsID, entitiesSizeList, isCollision)
+    calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife)
+    damping = 0.25
+    dt = 0.05
     integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                                     getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory)
-    transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+                                                     getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping, dt)
+    # transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+    transit = TransitMultiAgentChasingVariousForce(numEntities, reshapeWolfAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState)
 
-    resetState = ResetMultiAgentChasingWithCaughtHistory(numAgents, numBlocks)
+    mapSize = 1.1
+    agentMaxSize = max([sheepSize, wolfSize])
+    resetState = ResetMultiAgentChasingWithCaughtHistory(numAgents, numBlocks, mapSize, blockSize, agentMaxSize)
     reset = ResetStateWithCaughtHistory(resetState, calSheepCaughtHistory)
-    # reset = ResetMultiAgentChasing(numAgents, numBlocks)
+    # reset = ResetMultiAgentChasing(numAgents, numBlocks, mapSize, blockSize, agentMaxSize)
 
     isTerminal = lambda state: [False] * numAgents
     initObsForParams = observe(reset())
@@ -159,13 +172,14 @@ def main():
 
     getAgentModel = lambda agentId: lambda: trainMADDPGModels.getTrainedModels()[agentId]
     getModelList = [getAgentModel(i) for i in range(numAgents)]
-    modelSaveRate = 5000
+    modelSaveRate = 10000
     individStr = 'individ' if individualRewardWolf else 'shared'
     # fileName = "trainingId{}maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
     #     trainingID, numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}{}_agent".format(
         numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, sheepSpeedMultiplier, individStr)
-    folderName = '0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
+    folderName = "{}dt{}sheepSize{}block{}sheepLife{}biteReward{}killReward".format(
+        dt, sheepSize, numBlocks, sheepLife, biteReward, killReward)
     modelPath = os.path.join(dirName, '..', 'trainedModels', folderName, fileName)
     saveModels = [SaveModel(modelSaveRate, saveVariables, getTrainedModel, modelPath + str(i), saveAllmodels) for i, getTrainedModel in enumerate(getModelList)]
 

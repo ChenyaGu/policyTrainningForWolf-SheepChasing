@@ -26,8 +26,8 @@ class RewardWolfIndividual:
 
 
 class RewardWolfIndividualWithBiteAndKill:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife=10,
-                 biteReward=0.01, killReward=1):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife=3,
+                 biteReward=1, killReward=10):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
